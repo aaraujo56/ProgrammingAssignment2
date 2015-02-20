@@ -17,7 +17,7 @@
 
 makeCacheMatrix <- function(x = matrix()) {
     ## declare the caching variable for inverse matrix value inside 
-    ## top function environment and assign it a NULL value
+    ## makeCacheMatrix function environment and assign it a NULL value
     invm <- NULL
     
     ## setter function
@@ -28,15 +28,16 @@ makeCacheMatrix <- function(x = matrix()) {
         ## to NULL when setting new source matrix
         invm <<- NULL
     }
-    ## getter function: get current source matrix stored in the function
-    ## environment
+    ## getter function: get current source matrix stored as argument in parent
+    ## function environment
     get <- function() x
     
-    ## setter function: sets new inverse matrix and assigns to caching variable
-    ## in parent function environment
+    ## setter function: sets new inverse matrix from argument and assigns 
+    ## to caching variable in parent function environment
     setinverse <- function(newivm) invm <<- newivm
     
-    ## getter function: gets cached inverse matrix
+    ## getter function: gets cached inverse matrix from parent function
+    ## environment
     getinverse <- function() invm
     
     ## return list with all the functions that can be used to set and get
@@ -47,15 +48,17 @@ makeCacheMatrix <- function(x = matrix()) {
 }
 
 
-## cacheSolve is the worker function that returns the cached inverse matrix for
-## a particular matrix. It only runs the solve function to calculate the 
-## inverse the first round trip to the cached variable
+## cacheSolve returns the cached inverse matrix for a particular matrix. 
+## It only runs the solve function to calculate the inverse in the first round
+## trip to the cached variable when it gets NULL back
 
-## Requires x, a list created by makeCacheMatrix which contains all functions
-## to access the cached inverse matrix
+## This requires x to be a list created by makeCacheMatrix which contains all
+## functions to access the cached inverse matrix inside that function's
+## environment
 
 cacheSolve <- function(x, ...) {
-    ## invm is declared and an attempt is made to get the inverse matrix
+    ## invm is declared locally and an attempt is made to get the inverse
+    ## matrix using getinverse function in the list
     invm <- x$getinverse()
     
     ## if there is a cached inverse matrix, use it to return the result
@@ -64,16 +67,17 @@ cacheSolve <- function(x, ...) {
         message("getting cached data")
         return(invm)
     }
-    ## otherwise get the source matrix in the list from x
+    
+    ## otherwise get the source matrix in the list from argument x
     data <- x$get()
     
     ## run the solve function to compute the inverse of data, passing 
-    ## along any other variables that came along with the cacheSolve call
+    ## along any other arguments that came along with the cacheSolve call
     invm <- solve(data, ...)
     
-    ## save the resulting inverse matrix to the cache using the setter function
+    ## save the resulting inverse matrix to the cache using setter function
     x$setinverse(invm)
     
-    ## Return a matrix that is the inverse of x
+    ## Return local variable containing matrix that is the inverse of x
     invm
 }
